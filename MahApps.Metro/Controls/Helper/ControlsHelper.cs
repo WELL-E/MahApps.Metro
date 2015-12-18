@@ -41,7 +41,7 @@ namespace MahApps.Metro.Controls
                 "ContentCharacterCasing",
                 typeof (CharacterCasing),
                 typeof (ControlsHelper),
-                new FrameworkPropertyMetadata(CharacterCasing.Normal, FrameworkPropertyMetadataOptions.Inherits | FrameworkPropertyMetadataOptions.AffectsMeasure),
+                new FrameworkPropertyMetadata(CharacterCasing.Normal, FrameworkPropertyMetadataOptions.AffectsMeasure),
                 new ValidateValueCallback(value => CharacterCasing.Normal <= (CharacterCasing) value && (CharacterCasing) value <= CharacterCasing.Upper));
 
         /// <summary>
@@ -208,6 +208,31 @@ namespace MahApps.Metro.Controls
         public static Brush GetMouseOverBorderBrush(DependencyObject obj)
         {
             return (Brush)obj.GetValue(MouseOverBorderBrushProperty);
+        }
+
+        /// <summary>
+        /// DependencyProperty for <see cref="CornerRadius" /> property.
+        /// </summary>
+        public static readonly DependencyProperty CornerRadiusProperty
+            = DependencyProperty.RegisterAttached("CornerRadius", typeof(CornerRadius), typeof(ControlsHelper),
+                                                  new FrameworkPropertyMetadata(
+                                                      new CornerRadius(),
+                                                      FrameworkPropertyMetadataOptions.AffectsMeasure | FrameworkPropertyMetadataOptions.AffectsRender));
+
+        /// <summary> 
+        /// The CornerRadius property allows users to control the roundness of the button corners independently by 
+        /// setting a radius value for each corner. Radius values that are too large are scaled so that they
+        /// smoothly blend from corner to corner. (Can be used e.g. at MetroButton style)
+        /// Description taken from original Microsoft description :-D
+        /// </summary>
+        public static CornerRadius GetCornerRadius(UIElement element)
+        {
+            return (CornerRadius)element.GetValue(CornerRadiusProperty);
+        }
+
+        public static void SetCornerRadius(UIElement element, CornerRadius value)
+        {
+            element.SetValue(CornerRadiusProperty, value);
         }
     }
 }

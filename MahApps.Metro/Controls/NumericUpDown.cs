@@ -152,6 +152,12 @@ namespace MahApps.Metro.Controls
             typeof(NumericUpDown),
             new PropertyMetadata(true));
 
+        public static readonly DependencyProperty HasDecimalsProperty = DependencyProperty.Register(
+            "HasDecimals",
+            typeof(bool), 
+            typeof(NumericUpDown),
+            new FrameworkPropertyMetadata(true, OnHasDecimalsChanged));
+        
         private const double DefaultInterval = 1d;
         private const int DefaultDelay = 500;
         private const string ElementNumericDown = "PART_NumericDown";
@@ -442,6 +448,18 @@ namespace MahApps.Metro.Controls
             get { return Culture ?? Language.GetSpecificCulture(); }
         }
 
+        /// <summary>
+        ///     Indicates if the NumericUpDown should show the decimal separator or not.
+        /// </summary>
+        [Bindable(true)]
+        [Category("Common")]
+        [DefaultValue(true)]
+        public bool HasDecimals
+        {
+            get { return (bool)GetValue(HasDecimalsProperty); }
+            set { SetValue(HasDecimalsProperty, value); }
+        }
+
         /// <summary> 
         ///     Called when this element or any below gets focus.
         /// </summary>
@@ -652,7 +670,10 @@ namespace MahApps.Metro.Controls
                 {
                     if (textBox.Text.All(i => i.ToString(equivalentCulture) != numberFormatInfo.NumberDecimalSeparator) || allTextSelected)
                     {
-                        e.Handled = false;
+                        if (HasDecimals)
+                        {
+                            e.Handled = false;
+                        }
                     }
                 }
                 else
@@ -799,6 +820,10 @@ namespace MahApps.Metro.Controls
             var numericUpDown = (NumericUpDown)d;
             double val = ((double?)value).Value;
 
+            if (numericUpDown.HasDecimals == false)
+            {
+                val = Math.Truncate(val);
+            }
             if (val < numericUpDown.Minimum)
             {
                 return numericUpDown.Minimum;
@@ -868,6 +893,17 @@ namespace MahApps.Metro.Controls
             var numericUpDown = (NumericUpDown)d;
 
             numericUpDown.OnValueChanged((double?)e.OldValue, (double?)e.NewValue);
+        }
+
+        private static void OnHasDecimalsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            var numericUpDown = (NumericUpDown)d;
+            double? oldValue = numericUpDown.Value;
+
+            if ((bool)e.NewValue == false && numericUpDown.Value != null)
+            {
+                numericUpDown.Value = Math.Truncate(numericUpDown.Value.GetValueOrDefault());
+            }
         }
 
       private static bool ValidateDelay(object value)
@@ -996,6 +1032,23 @@ namespace MahApps.Metro.Controls
         private void OnTextBoxKeyDown(object sender, KeyEventArgs e)
         {
             _manualChange = true;
+
+            if (e.Key == Key.Decimal || e.Key == Key.OemPeriod)
+            {
+                TextBox textBox = sender as TextBox;
+
+                if (textBox.Text.Contains(this.SpecificCultureInfo.NumberFormat.NumberDecimalSeparator) == false)
+                {
+                    //the control doesn't contai the decimal separator
+                    //so we get the current caret index to insert the current culture decimal separator
+                    var caret = textBox.CaretIndex;
+                    //update the control text
+                    textBox.Text = textBox.Text.Insert(caret, this.SpecificCultureInfo.NumberFormat.CurrencyDecimalSeparator);
+                    //move the caret to the correct position
+                    textBox.CaretIndex = caret + 1;
+                }
+                e.Handled = true;
+            }
         }
 
         private void OnTextBoxLostFocus(object sender, RoutedEventArgs e)
